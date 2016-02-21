@@ -46,9 +46,10 @@ gulp.task('build-js', function () {
         });
         b = b.transform(stringify, ['.html']);
         b = b.transform(uglifyify, {ignore: '**/*.min.js', sourcemap: true});
-    } catch (exception){
+    } catch (exception) {
         console.error(exception);
-        arguments[0]()
+        arguments[0]();
+    }
 
 
     return b.bundle()
