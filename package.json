@@ -38,7 +38,10 @@
   },
   "dependencies": {
     "angular": "^1.5.0",
+    "angular-cookies": "^1.5.0",
+    "angular-ui-router": "^0.2.18",
     "bootstrap": "^3.3.6",
-    "jquery": "^2.2.0"
+    "jquery": "^2.2.0",
+    "three": "^0.74.0"
   }
 }

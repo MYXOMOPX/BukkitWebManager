@@ -1,5 +1,11 @@
 "use strict";
 
+/**
+ Параметры:
+    uglify - минимизирует код при true
+    websocketAddress - подменяет адрес, куда подключается websocket (Адрес целиком: ws://host:port)
+ */
+
 var gulp = require('gulp');
 var browserify = require('browserify');
 //var browserify = require('gulp-browserify');
@@ -18,8 +24,8 @@ var open = require('open'); // Открыть браузер
 var autoprefixer = require('gulp-autoprefixer');
 var plumber = require('gulp-plumber'); // Игнорит ошибки при watch
 var connect = require('gulp-connect'); // Web-сервер.
-// var util = require('gulp-util');
-// var env = util.env;
+ var util = require('gulp-util');
+ var env = util.env;
 var gulpif = require('gulp-if');
 var less = require('gulp-less');
 var minifyCss = require('gulp-minify-css');
@@ -31,12 +37,20 @@ var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 
 /**
+ * Проверка переменных env
+ */
+
+//if (!env.websocketAddress) {
+//    env.websocketAddress = "ws://localhost:7373";
+//}
+//console.log(env);
+/**
  * Сборка app.min.js
  */
-gulp.task('build-js', function () {
+gulp.task('build:js', function () {
     // set up the browserify instance on a task basis
     var b = browserify({
-        entries: './src/js/modules/Main/Main.js',
+        entries: './src/js/modules/BWM/BWM.js',
         debug: true
     });
     try {
@@ -45,7 +59,9 @@ gulp.task('build-js', function () {
             ignore: /\.min\.js/
         });
         b = b.transform(stringify, ['.html']);
-        b = b.transform(uglifyify, {ignore: '**/*.min.js', sourcemap: true});
+        if (env.uglify) {
+            b = b.transform(uglifyify, {ignore: '**/*.min.js', sourcemap: true});
+        }
     } catch (exception) {
         console.error(exception);
         arguments[0]();
@@ -54,6 +70,7 @@ gulp.task('build-js', function () {
 
     return b.bundle()
         .pipe(source('app.min.js'))
+        .pipe(replace("WEBSOCKET_ADDRESS",env.websocketAddress))
         .pipe(buffer()) // главное - работает!
         .pipe(plumber())
         .pipe(sourcemaps.init({loadMaps: true}))
@@ -62,11 +79,11 @@ gulp.task('build-js', function () {
         .pipe(gulp.dest('./out/js/'));
 });
 
-gulp.task('watch-js',gulp.series('build-js',function doWatchJs(){
-    return gulp.watch("src/js/**/*",gulp.series('build-js'));
+gulp.task('watch:js',gulp.series('build:js',function doWatchJs(){
+    return gulp.watch("src/js/**/*",gulp.series('build:js'));
 }));
 
-gulp.task('build-less', function(){
+gulp.task('build:less', function(){
     return gulp.src('./src/less/style.less')
         .pipe(less())
         .pipe(sourcemaps.init({loadMaps: true}))
@@ -76,10 +93,14 @@ gulp.task('build-less', function(){
         .pipe(gulp.dest('./out/css/'))
 });
 
-gulp.task('watch-less',gulp.series('build-less',function doWatchLess(){
-    return gulp.watch("src/less/**/*",gulp.series('build-less'));
+gulp.task('watch:less',gulp.series('build:less',function doWatchLess(){
+    gulp.watch("src/less/**/*",gulp.series('build:less'));
+    return gulp.watch("src/css/*",gulp.series('build:less'));
 }));
 
 
 
-gulp.task('watch',gulp.parallel('watch-js','watch-less'));
+gulp.task('watch',gulp.parallel('watch:js','watch:less'));
+gulp.task('build',gulp.parallel('build:less','build:js'));
+
+gulp.task("default",gulp.series('build'));
