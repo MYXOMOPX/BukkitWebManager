@@ -7,6 +7,8 @@ import StateConfig from "./state/StateConfig"
 import AddressConfig from "./AddressConfig/AddressConfig"
 import ServicesConfig from "./Services/ServicesConfig"
 import BukkitMapDirective from "./BukkitMapDirective/BukkitMap.directive"
+import THREE from "../../../../node_modules/three/three.min"
+import "../../utils/THREEJS/THREELibraries"
 
 export default angular.module("BWM-UI",[BukkitAPI,angularUiRouter,angularCookies])
     .config(StateConfig)

@@ -22,9 +22,8 @@ function Controls(domElement,mapMesh,camera){
     var rotationSpeed = Math.PI/1000; // move per. second
     var cameraMesh = new THREE.Object3D();
     cameraMesh.position.set(0,0,0); // MIDDLE OF MAP
-    camera.position.set(0,0,0);
-    camera.position.x += radius;
     mapMesh.add(cameraMesh);
+    camera.position.set(10,0,10)
     cameraMesh.add(camera);
 
     var pressedKeys = {};
@@ -52,41 +51,31 @@ function Controls(domElement,mapMesh,camera){
         object.rotation.setFromRotationMatrix(object.matrix);
     }
 
-    var heightOffset = 0;
-    var posX = camera.position.x;
-    var posZ = camera.position.z;
     function moveCamera(){
         if (disabled) return;
         RequestAnimationFrame(moveCamera);
 
-        var heightOffsetModifier = getHeightOffsetModifier();
-        if (Math.abs(heightOffsetModifier+heightOffset) > radius) return;
-        heightOffset += heightOffsetModifier;
-        var distance = radius-Math.abs(heightOffset)/radius*(radius-0.0001);
-        //camera.position.y = mapMesh.position.y + heightOffset;
-        var angle = getRotation();
-
-        var x = posX;
-        var z = posZ;
-
-        posX = x * Math.cos(angle) + z * Math.sin(angle);
-        posZ = z * Math.cos(angle) - x * Math.sin(angle);
-        var newCameraPos = new THREE.Vector3(posX,0,posZ).multiplyScalar(distance/radius);
-        camera.position.set(newCameraPos.x,heightOffset,newCameraPos.z);
-        camera.lookAt(cameraMesh.position);
-        //if (!axis) return;
-        //rotateObject(mapMesh,axis,rotationSpeed);
+        var euler = getCurrentEulerRotation();
+        if (!euler) return;
+        //cameraMesh.rotation.x = euler.x;
+        //cameraMesh.rotation.y = euler.y;
+        //cameraMesh.rotation.z = euler.z;
+        cameraMesh.position.applyEuler(euler)
     }
 
-    function getRotation(){
-        var angle = 0;
+    function getCurrentEulerRotation(){
+        var x,y,z;
+        x = y = z = 0;
         for (var kChar in pressedKeys) {
             var time = pressedKeys[kChar];
-            if (kChar == "R") angle += (Date.now()-time)*rotationSpeed;
-            if (kChar == "L") angle -= (Date.now()-time)*rotationSpeed;
-            if (kChar == "L" || kChar == "R") pressedKeys[kChar] = Date.now();
+            if (kChar == "R") z += (Date.now()-time)*rotationSpeed;
+            if (kChar == "L") z -= (Date.now()-time)*rotationSpeed;
+            if (kChar == "U") y += (Date.now()-time)*rotationSpeed;
+            if (kChar == "D") y -= (Date.now()-time)*rotationSpeed;
+            pressedKeys[kChar] = Date.now();
         }
-        return angle;
+        if (x == 0 && y == 0 && z == 0) return null;
+        return new THREE.Euler(x,y,z);
     }
 
     function getHeightOffsetModifier(){
